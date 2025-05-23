@@ -3,10 +3,8 @@ package com.example.demo.service;
 
 import com.example.demo.web.dto.ChatReq;
 import com.example.demo.web.dto.ChatRes;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -48,7 +46,6 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public ChatRes chat(ChatReq req) throws Exception {
-        //String openAiResponse = openAiChatModel.call(request.getMessage() + sys + etc);
 
         int age = req.getAge();
         double vision = req.getVision();
@@ -61,7 +58,7 @@ public class AiServiceImpl implements AiService {
         String userMessage = String.format("age:%d, vision:%.1f, disease:%s", age, vision, diseaseTags);
 
         // 프롬프트
-        //String prompt = String.format("age:%d, vision:%.1f, disease:%s", age, vision, diseaseTags);
+
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemMessage));
         messages.add(Map.of("role", "user", "content", userMessage));
@@ -150,16 +147,5 @@ public class AiServiceImpl implements AiService {
             log.error("응답에서 'choices'가 비어 있습니다.");
             throw new Exception("OpenAI API 응답 처리 오류");
         }
-//        return new ChatRes(
-//                openAiChatModel.call(request.getMessage() + sys + "call back recommended between eye-blink time(sec). only number. not sentence."),
-//                openAiChatModel.call(request.getMessage() + sys + "calculate my eye-score(1~100). 보통 시력은 0.6이야.ONLY NUMBER, DON'T USE SENTENCE."),
-//                openAiChatModel.call(request.getMessage() + sys + "tell your opinion in my eye condition in 2 lines. compare similar age I DONT NEED FLOWERY LANGUAGE"),
-//                openAiChatModel.call(request.getMessage() + sys + "tell food for my eye health. 2~3."),
-//                openAiChatModel.call(request.getMessage() + sys + "for my eyes tell me eye stretch. 3 is enough. in 100 word")
-//        String duration,
-//        String score,
-//        String tip,
-//        String food,
-//        String stretch
     }
 }
