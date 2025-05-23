@@ -1,12 +1,18 @@
 package com.example.demo.web.dto;
 
-import java.util.Map;
+import java.util.List;
 
 public record ChatRes(
-        String duration,
+        String term,
         String score,
         String tip,
-        String food,
-        String stretch
+        List<Food> food,
+        List<String> stretchTips
 ) {
+    public record Food(
+            String name,
+            List<String> ingredient,
+            List<String> effect) {
+
+    }
 }

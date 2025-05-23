@@ -5,5 +5,5 @@ import com.example.demo.web.dto.ChatRes;
 
 public interface AiService {
     // AI 응답
-    ChatRes chat(ChatReq request);
+    ChatRes chat(ChatReq req) throws Exception;
 }
