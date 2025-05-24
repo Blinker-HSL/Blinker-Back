@@ -14,6 +14,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 
 import java.util.ArrayList;
@@ -28,11 +29,10 @@ public class AiServiceImpl implements AiService {
     private final Message sys = new SystemMessage(
             "result must translate in Korean. useless conversation is BAN. dont use English.");
 
-
-    @Value("${FINE_TUNED_MODEL}")
+    @Value("${openai.fine-tuned-model}")
     private String fineTunedModel;
 
-    @Value("${OPENAI_API_KEY}")
+    @Value("${spring.ai.openai.api-key}")
     private String apiKey;
 
     private final RestTemplate restTemplate;
@@ -45,12 +45,42 @@ public class AiServiceImpl implements AiService {
     }
 
     @Override
-    public ChatRes chat(ChatReq req) throws Exception {
-
+    public ChatRes chat(ChatReq req, List<MultipartFile> images) throws Exception {
         int age = req.getAge();
         double vision = req.getVision();
         List<String> diseaseTags = req.getDiseaseTags();
-        int count = 10; // openCV 호출 필요
+        int count = 10; // 기본값, 아래에서 Flask 서버 호출로 업데이트
+
+        // Flask 서버 호출 - 이미지 리스트 전송하여 blink count 얻기
+        if (images != null && !images.isEmpty()) {
+            // flask 서버 주소소
+            String flaskUrl = "http://localhost:5001/analyze-eyes";
+            org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
+            for (MultipartFile img : images) {
+                org.springframework.core.io.ByteArrayResource imageResource = new org.springframework.core.io.ByteArrayResource(img.getBytes()) {
+                    @Override
+                    public String getFilename() {
+                        return img.getOriginalFilename();
+                    }
+                };
+                body.add("images", imageResource);
+            }
+
+            HttpHeaders flaskHeaders = new HttpHeaders();
+            flaskHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+            HttpEntity<org.springframework.util.MultiValueMap<String, Object>> flaskRequest = new HttpEntity<>(body, flaskHeaders);
+            try {
+                ResponseEntity<String> flaskRes = restTemplate.postForEntity(flaskUrl, flaskRequest, String.class);
+                if (flaskRes.getStatusCode().is2xxSuccessful()) {
+                    JsonNode blinkJson = objectMapper.readTree(flaskRes.getBody());
+                    count = blinkJson.get("blink_count").asInt();
+                    log.info("Flask 응답 blink_count: {}", count);
+                }
+            } catch (Exception e) {
+                log.error("Flask 서버 호출 실패: {}", e.getMessage());
+                count = 10; // 기본값
+            }
+        }
 
         String systemMessage = "Respond only in Korean. Format must be JSON. No extra words.";
 
@@ -83,6 +113,7 @@ public class AiServiceImpl implements AiService {
             log.info("호출 끝 - OpenAI 응답 수신 성공");
             String responseBody = res.getBody();
         } catch (HttpStatusCodeException e) {
+            log.info("🔑 OpenAI API KEY = {}", apiKey);
             log.error("OpenAI API 호출 오류 발생: 상태 코드={} 응답 본문={}",
                     e.getStatusCode(), e.getResponseBodyAsString());
         }

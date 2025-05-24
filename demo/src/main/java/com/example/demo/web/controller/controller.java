@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -19,10 +22,27 @@ public class controller {
     private final AiService aiService;
     private final WebService webService;
 
+    ObjectMapper objectMapper = new ObjectMapper();
+
     @PostMapping("/chat")
-    public ResponseEntity<?> send(@RequestBody ChatReq request) {
+    public ResponseEntity<?> send(
+            @RequestParam("age") int age,
+            @RequestParam("vision") double vision,
+            @RequestParam("tags") String tagsJson,
+            @RequestPart("images") List<MultipartFile> images
+    ) {
         try {
-            ChatRes res = aiService.chat(request);
+            // 받아온 tagsJson(눈 증상)을 DTO 형식에 맞게 objectMapper로 문자열을 리스트로 파싱
+            List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
+
+            // setter로 DTO 생성
+            ChatReq request = new ChatReq();
+            request.setAge(age);
+            request.setVision(vision);
+            request.setDiseaseTags(tags);
+
+            // 이미지 List도 Service 로직에게 전달
+            ChatRes res = aiService.chat(request, images);
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(res);
