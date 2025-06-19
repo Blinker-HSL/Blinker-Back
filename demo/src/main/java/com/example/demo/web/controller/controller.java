@@ -6,6 +6,7 @@ import com.example.demo.service.WebService;
 import com.example.demo.web.dto.*;
 import com.example.demo.service.AiService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.List;
 @RequestMapping("/api")
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class controller {
     private final AiService aiService;
     private final WebService webService;
@@ -31,6 +33,8 @@ public class controller {
             @RequestParam("tags") String tagsJson,
             @RequestPart("images") List<MultipartFile> images
     ) {
+        log.info(tagsJson);
+        log.info("size", images.size());
         try {
             // 받아온 tagsJson(눈 증상)을 DTO 형식에 맞게 objectMapper로 문자열을 리스트로 파싱
             List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
