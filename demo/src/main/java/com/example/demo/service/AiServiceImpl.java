@@ -54,7 +54,7 @@ public class AiServiceImpl implements AiService {
         // Flask 서버 호출 - 이미지 리스트 전송하여 blink count 얻기
         if (images != null && !images.isEmpty()) {
             // flask 서버 주소소
-            String flaskUrl = "http://localhost:5001/analyze-eyes";
+            String flaskUrl = "http://localhost:5050/analyze-eyes";
             org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
             for (MultipartFile img : images) {
                 org.springframework.core.io.ByteArrayResource imageResource = new org.springframework.core.io.ByteArrayResource(img.getBytes()) {
@@ -101,7 +101,7 @@ public class AiServiceImpl implements AiService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
-
+        log.info(headers.toString());
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
         ResponseEntity<String> res = null;
         try {
@@ -147,6 +147,7 @@ public class AiServiceImpl implements AiService {
             }
 
             List<ChatRes.Food> foods = new ArrayList<>();
+
             for (int i = 0; i < 3; i++) {
                 String name = parsed.get("4-name").get(i).asText();
                 List<String> ingredients = new ArrayList<>();
@@ -159,7 +160,12 @@ public class AiServiceImpl implements AiService {
                 }
                 foods.add(new ChatRes.Food(name, ingredients, effects));
             }
-
+            List<String> ingDummy1 = List.of("베타카로틴", "안토시아닌");
+            List<String> ingDummy2 = List.of("루테인","비타민E");
+            List<String> effDummy1 = List.of("야맹증 예방", "시력 개선");
+            List<String> effDummy2 = List.of("혈류 개선", "눈 피로 개선");
+            foods.add(new ChatRes.Food("고구마", ingDummy1, effDummy1));
+            foods.add(new ChatRes.Food("아몬드", ingDummy2, effDummy2));
             List<String> stretches = List.of(
                     parsed.get("5-1").asText(),
                     parsed.get("5-2").asText(),
